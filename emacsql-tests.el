@@ -217,6 +217,17 @@
     (should (equal (emacsql db [:select * :from foo])
                    '((1) (2) (3))))))
 
+(ert-deftest emacsql-special-chars ()
+  "A short test that interacts with SQLite with special characters."
+  (should-not (emacsql-sqlite3-unavailable-p))
+  (let ((emacsql-global-timeout 4))
+    (emacsql-with-connection (db (emacsql-sqlite nil))
+      (emacsql db [:create-table test-table [x]])
+      (emacsql db [:insert :into test-table :values ["x"]]) ; \
+      (should (process-live-p (emacsql-process db)))
+      (should (equal (emacsql db [:select * :from test-table])
+                     '(("x")))))))
+
 (ert-deftest emacsql-foreign-system ()
   "Tests that foreign keys work properly through Emacsql."
   (emacsql-with-connection (db (emacsql-sqlite nil))

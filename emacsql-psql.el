@@ -51,7 +51,8 @@
       (push "-h" args)
       (push hostname args))
     (setf args (nreverse args))
-    (let* ((buffer (generate-new-buffer "*emacsql-psql*"))
+    (let* ((process-connection-type nil)  ; must use pipes!
+           (buffer (generate-new-buffer "*emacsql-psql*"))
            (psql emacsql-psql-executable)
            (process (apply #'start-process "emacsql-psql" buffer psql args))
            (connection (make-instance 'emacsql-psql-connection
