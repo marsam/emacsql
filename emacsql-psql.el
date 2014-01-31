@@ -81,6 +81,9 @@
     (when (process-live-p process)
       (process-send-string process "\\q\n"))))
 
+(defmethod emacsql-wait :before ((connection emacsql-psql-connection))
+  (process-send-string (emacsql-process connection) "\\echo ]\n"))
+
 (provide 'emacsql-psql)
 
 ;;; emacsql-psql.el ends here
