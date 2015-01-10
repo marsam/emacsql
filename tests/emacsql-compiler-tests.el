@@ -75,16 +75,16 @@
     ([:select * :from employees] '()
      "SELECT * FROM employees;")
     ([:select * :from employees :where (< salary 50000)] '()
-     "SELECT * FROM employees WHERE salary < 50000;")
+     "SELECT * FROM employees WHERE (salary < 50000);")
     ([:select * :from people :where (in name $v1)] '([FOO BAR])
-     "SELECT * FROM people WHERE name IN ('FOO', 'BAR');")
+     "SELECT * FROM people WHERE (name IN ('FOO', 'BAR'));")
     ;; Sub queries
     ([:select name :from [:select * :from $i1]] '(people)
      "SELECT name FROM (SELECT * FROM people);")
     ([:select name :from [people (as accounts a)]] '()
-     "SELECT name FROM people, accounts AS a;")
+     "SELECT name FROM people, (accounts AS a);")
     ([:select p:name :from [(as [:select * :from people] p)]] '()
-     "SELECT p.name FROM (SELECT * FROM people) AS p;")))
+     "SELECT p.name FROM ((SELECT * FROM people) AS p);")))
 
 (ert-deftest emacsql-create-table ()
   (emacsql-tests-with-queries
@@ -97,7 +97,7 @@
     ([:create-table foo ([(a :primary-key :not-null) b])] '()
      "CREATE TABLE foo (a &NONE PRIMARY KEY NOT NULL, b &NONE);")
     ([:create-table foo ([a (b :check (< b 10))])] '()
-     "CREATE TABLE foo (a &NONE, b &NONE CHECK (b < 10));")
+     "CREATE TABLE foo (a &NONE, b &NONE CHECK ((b < 10)));")
     ([:create-table foo $S1] '([a b (c :primary-key)])
      "CREATE TABLE foo (a &NONE, b &NONE, c &NONE PRIMARY KEY);")
     ([:create-table foo ([a b (c :default "FOO")])] '()
@@ -111,7 +111,7 @@
     ([:create-table foo ([a b c] (:unique [a b c]))] '()
      "CREATE TABLE foo (a &NONE, b &NONE, c &NONE, UNIQUE (a, b, c));")
     ([:create-table foo ([a b] (:check (< a b)))] '()
-     "CREATE TABLE foo (a &NONE, b &NONE, CHECK (a < b));")
+     "CREATE TABLE foo (a &NONE, b &NONE, CHECK ((a < b)));")
     ([:create-table foo ([a b c]
                          (:foreign-key [a b] :references bar [aa bb]
                                        :on-delete :cascade))] '()
@@ -147,7 +147,7 @@
     ([:order-by (- foo)] '()
      "ORDER BY -(foo);")
     ([:order-by [(asc a) (desc (/ b 2))]] '()
-     "ORDER BY a ASC, b / 2 DESC;")))
+     "ORDER BY a ASC, (b / 2) DESC;")))
 
 (ert-deftest emacsql-limit ()
   (emacsql-tests-with-queries
@@ -172,13 +172,13 @@
 (ert-deftest emacsql-expr ()
   (emacsql-tests-with-queries
     ([:where (and a b)] '()
-     "WHERE a AND b;")
+     "WHERE (a AND b);")
     ([:where (or a $i1)] '(b)
-     "WHERE a OR b;")
+     "WHERE (a OR b);")
     ([:where (and $i1 $i2 $i3)] '(a b c)
-     "WHERE a AND b AND c;")
+     "WHERE (a AND b AND c);")
     ([:where (is foo (not nil))] '()
-     "WHERE foo IS NOT NULL;")
+     "WHERE (foo IS (NOT NULL));")
     ([:where (= attrib :name)] '()
      "WHERE attrib = ':name';")))
 

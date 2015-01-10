@@ -253,8 +253,8 @@ which will be combined with variable definitions."
             ;; Special cases <= >=
             ((<= >=)
              (cl-case (length args)
-               (2 (format "%s %s %s" (recur 0) op (recur 1)))
-               (3 (format "%s BETWEEN %s AND %s"
+               (2 (format "(%s %s %s)" (recur 0) op (recur 1)))
+               (3 (format "(%s BETWEEN %s AND %s)"
                           (recur 1)
                           (recur (if (eq op '>=) 2 0))
                           (recur (if (eq op '>=) 0 2))))
@@ -263,11 +263,11 @@ which will be combined with variable definitions."
             ((-)
              (cl-case (length args)
                (1 (format "-(%s)" (recur 0)))
-               (2 (format "%s - %s" (recur 0) (recur 1)))
+               (2 (format "(%s - %s)" (recur 0) (recur 1)))
                (otherwise (nops op))))
             ;; Unary
             ((not)
-             (format "NOT %s" (recur 0)))
+             (format "(NOT %s)" (recur 0)))
             ;; Ordering
             ((asc desc)
              (format "%s %s" (recur 0) (upcase (symbol-name op))))
@@ -283,11 +283,19 @@ which will be combined with variable definitions."
                         #'recur (cl-loop for i from 1 below (length args)
                                          collect i)
                         ", "))))
-            ;; Guess
-            (otherwise
+            ;; No wrapping parentheses
+            ((=) ;; because of SET pseudo-expression
              (mapconcat
               #'recur (cl-loop for i from 0 below (length args) collect i)
-              (format " %s " (upcase (symbol-name op))))))))))))
+              (format " %s " (upcase (symbol-name op)))))
+            ;; Guess
+            (otherwise
+             (concat
+              "("
+              (mapconcat
+               #'recur (cl-loop for i from 0 below (length args) collect i)
+               (format " %s " (upcase (symbol-name op))))
+              ")")))))))))
 
 (defun emacsql--*idents (idents)
   "Read in a vector of IDENTS identifiers, or just an single identifier."
