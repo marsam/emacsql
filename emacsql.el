@@ -206,6 +206,11 @@ specific error conditions."
 (cl-defmethod emacsql-parse ((connection emacsql-protocol-mixin))
   "Parse well-formed output into an s-expression."
   (with-current-buffer (emacsql-buffer connection)
+    (save-excursion ;; HACK: avoid the reader interpret the sharpsign
+      (goto-char (point-min))
+      (while (re-search-forward "\\([#;]\\)" nil t)
+        (unless (looking-at "$")
+          (replace-match (concat "\\" (match-string 1)) nil t))))
     (setf (point) (point-min))
     (let* ((standard-input (current-buffer))
            (value (read)))
